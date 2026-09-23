@@ -17,7 +17,7 @@ function shouldShowTap() {
 }
 
 function getBdayDismissKey(personId) {
-  const today = new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" });
+  const today = new Date().toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
   return `intercede-bday-dismissed-${personId}-${today}`;
 }
 function isBdayDismissed(personId) {
@@ -96,9 +96,9 @@ async function apiSaveHistory(history) {
 }
 
 function getWeekLabel(weekStartTs) {
-  // Show the Monday date of that week clearly
+  // Show the Tuesday date of that week clearly
   const d = new Date(weekStartTs);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Los_Angeles" });
 }
 
 // Stable per-person rotation so the card looks the same each load but varies per person
@@ -115,9 +115,9 @@ function genId() {
 }
 
 function getWeekStartET() {
-  // Returns UTC timestamp of most recent Monday midnight Eastern Time
+  // Returns UTC timestamp of most recent Tuesday midnight Pacific Time
   const now = new Date();
-  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
   const etNow = new Date(etStr);
   const day = etNow.getDay(); // 0=Sun
   const daysFromMon = day === 0 ? 6 : day - 1;
@@ -132,7 +132,7 @@ function getWeekStartET() {
 
 function getWeekDateStringET() {
   const now = new Date();
-  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
   const etNow = new Date(etStr);
   const day = etNow.getDay();
   const daysFromMon = day === 0 ? 6 : day - 1;
@@ -143,7 +143,7 @@ function getWeekDateStringET() {
 
 function getPrevWeekDateStringET() {
   const now = new Date();
-  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
   const etNow = new Date(etStr);
   const day = etNow.getDay();
   const daysFromMon = day === 0 ? 6 : day - 1;
@@ -159,12 +159,12 @@ function withinWeek(ts) {
 function timeAgo(ts) {
   if (!ts) return null;
   // Compare calendar dates (midnight-to-midnight) in Eastern time
-  const toETMidnight = t => {
-    const etStr = new Date(t).toLocaleDateString("en-US", { timeZone: "America/New_York" });
+  const toPTMidnight = t => {
+    const etStr = new Date(t).toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
     return new Date(etStr).getTime();
   };
-  const todayMidnight = toETMidnight(Date.now());
-  const tsMidnight = toETMidnight(ts);
+  const todayMidnight = toPTMidnight(Date.now());
+  const tsMidnight = toPTMidnight(ts);
   const days = Math.round((todayMidnight - tsMidnight) / 86400000);
   if (days === 0) return "today";
   if (days === 1) return "yesterday";
@@ -429,10 +429,10 @@ function AllPrayedScreen({ prayedCount, praySessionCount, total, onWeek, onKeepP
   const [show, setShow] = React.useState(false);
   React.useEffect(() => { setTimeout(() => setShow(true), 100); }, []);
 
-  // Calculate next Monday midnight ET — stable, computed once
-  const nextMonday = React.useMemo(() => {
+  // Calculate next Tuesday midnight PT — stable, computed once
+  const nextTuesday = React.useMemo(() => {
     const now = new Date();
-    const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+    const etStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
     const etNow = new Date(etStr);
     const day = etNow.getDay();
     const daysUntil = day === 1 ? 7 : (8 - day) % 7 || 7;
@@ -443,7 +443,7 @@ function AllPrayedScreen({ prayedCount, praySessionCount, total, onWeek, onKeepP
     return monET.getTime() + utcOffset;
   }, []);
 
-  const isMonday = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" })).getDay() === 1;
+  const isTuesday = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })).getDay() === 1;
 
   return (
     <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"0 24px 40px", gap:20, textAlign:"center" }}>
@@ -460,14 +460,14 @@ function AllPrayedScreen({ prayedCount, praySessionCount, total, onWeek, onKeepP
       <p style={{ fontSize:14, color:"#6b9e78", margin:0, fontWeight:500 }}>
         {praySessionCount > prayedCount ? praySessionCount : prayedCount} of {total} this week
       </p>
-      {isMonday ? (
+      {isTuesday ? (
         <p style={{ fontSize:13, color:"#7a8082", margin:0, lineHeight:1.7, maxWidth:280 }}>
           The week just reset — keep the momentum going!
         </p>
       ) : (
         <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"center" }}>
-          <p style={{ fontSize:13, color:"#7a8082", margin:0 }}>Check Back Monday</p>
-          <CountdownTicker targetTs={nextMonday} />
+          <p style={{ fontSize:13, color:"#7a8082", margin:0 }}>Check Back Tuesday</p>
+          <CountdownTicker targetTs={nextTuesday} />
         </div>
       )}
       <button onClick={() => onKeepPraying()} style={{ background:C.accent, border:"none", color:C.bg, borderRadius:12, padding:"13px 28px", fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"'Inter', system-ui, sans-serif", boxShadow:"0 4px 20px rgba(107,158,120,0.3)" }}>
@@ -647,9 +647,9 @@ function AppMain({ settings }) {
         if (data.length > 0) setPeople(data);
 
         const currentWeekStart = getWeekStartET();
-        const currentWeekDate = new Date(currentWeekStart).toLocaleDateString("en-US", { timeZone: "America/New_York" });
+        const currentWeekDate = new Date(currentWeekStart).toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
         const lastSnapshotDate = history.length > 0
-          ? new Date(history[0].weekStart).toLocaleDateString("en-US", { timeZone: "America/New_York" })
+          ? new Date(history[0].weekStart).toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" })
           : null;
 
         if (lastSnapshotDate !== currentWeekDate) {
@@ -1082,9 +1082,9 @@ function AppMain({ settings }) {
     for (let i = 1; i <= 3; i++) {
       const wStart = currentWeekStart - i * 7 * 24 * 60 * 60 * 1000;
       const wEnd   = currentWeekStart - (i - 1) * 7 * 24 * 60 * 60 * 1000;
-      // Build date string for this week's Monday
+      // Build date string for this week's Tuesday
       const wDate = new Date(wStart);
-      const etStr = wDate.toLocaleString("en-US", { timeZone: "America/New_York" });
+      const etStr = wDate.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
       const etD = new Date(etStr);
       const wDateStr = `${etD.getMonth()+1}/${etD.getDate()}/${etD.getFullYear()}`;
       const prayed = people.filter(p =>
@@ -1707,7 +1707,7 @@ function AppMain({ settings }) {
                   const daysUntil = (bday) => {
                     if (!bday) return 9999;
                     const [m, d] = bday.split("-").map(Number);
-                    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+                    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
                     const thisYear = new Date(now.getFullYear(), m - 1, d);
                     let diff = Math.ceil((thisYear - now) / 86400000);
                     if (diff < 0) diff += 365; // already passed this year — push to end
@@ -1770,7 +1770,7 @@ function AppMain({ settings }) {
               </div>
             </div>
             {weekHistory.length === 0 ? (
-              <p style={S.reportEmpty}>Data will appear here after the first Monday reset.</p>
+              <p style={S.reportEmpty}>Data will appear here after the first Tuesday reset.</p>
             ) : weekHistory.map((w, i) => {
               const pct = w.total > 0 ? Math.round((w.count / w.total) * 100) : 0;
               const weekEndTs = w.weekStart - 1;
